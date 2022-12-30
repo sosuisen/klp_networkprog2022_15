@@ -1,0 +1,25 @@
+<%- include('header'); %>
+<style>
+  div.formlabel {
+    width: 100px;
+    float: left;
+  }
+  div.formfield {
+    width: 200px;
+    float: left;
+  }
+  div.formitem{
+    clear: both;
+  }
+</style>
+<h2>ログイン</h1>
+<form method="POST" action="/login">
+  <div class="formitem"></div>
+    <div class="formlabel">ユーザ名</div> <div class="formfield"><input type="text" name="username"></div>
+  </div>
+  <div class="formitem">
+    <div class="formlabel">パスワード</div> <div class="formfield"><input type="password" name="password"></div>
+  </div>
+  <div class="formitem"><input type="submit" name="login"></div>
+</form>
+<%- include('footer'); %>

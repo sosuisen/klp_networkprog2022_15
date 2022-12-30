@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    div.leftmenu {
+      border-right: 1px solid #c0c0d0;
+      padding: 7px;
+      float: left;
+    }
+
+    div.rightmenu {
+      border-left: 1px solid #c0c0d0;
+      padding: 7px;
+      float: right;
+    }
+
+    div#menubar {
+      border-top: 2px solid #c0c0d0;
+      border-bottom: 2px solid #c0c0d0;
+    }
+
+    a {
+      text-decoration-line: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>チャットサービス</h1>
+  <div id="menubar">
+    <div class="leftmenu"><a href="/">ホーム</a></div>
+    <div class="rightmenu">
+      <% if (typeof userName !=="undefined") { %>
+        <a href="logout">ログアウト</a>
+      <% } else { %>
+        <a href="login">ログイン</a>
+      <% } %>
+    </div>
+  <% if (typeof userName !=="undefined") { %>
+    <div class="rightmenu">こんにちは、<%= userName %>さん！</div>
+  <% } %>
+  <br clear="both" />
+  </div>

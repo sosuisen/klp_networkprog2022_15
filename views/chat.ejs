@@ -1,0 +1,24 @@
+<%- include('header'); %>
+<br />
+  <div>
+    ルーム名：<input type="text" id="roomName"/> <button id="enterLeaveButton">入室</button>
+  </div>
+  <div>
+    サーバへ送信するメッセージ：<input type="text" id="fromClient" /> ※ Enterキーで送信
+  </div>
+  <hr>
+  <div id="status" style="color: red">
+    [退室中]
+  </div>
+  <hr>
+  <div>
+    サーバから受信したメッセージ：
+  </div>
+  <div id="fromServer"></div>
+  <div id="typing" style="color:red"></div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const userName = '<%= userName %>';
+  </script>
+  <script src="chat.js" charset="utf-8"></script>
+<%- include('footer'); %>  
