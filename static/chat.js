@@ -1,6 +1,4 @@
 let socket;
-// userName は chat.ejs で宣言しているので、宣言不要
-// let userName = '';
 let roomName = '';
 
 // (2) 退室時のUIリセット
@@ -16,7 +14,6 @@ const connect = () => {
   // ユーザ名をセットして送信
   socket = io('ws://localhost:8080/', {
     query: {
-      userName,
       roomName,
     },
     reconnectionAttempts: 5,
@@ -26,6 +23,15 @@ const connect = () => {
 
   socket.on('connect', socket => {
     document.getElementById('status').innerText = '[入室済]';
+  });
+
+  socket.on('connect_error', err => {
+    let mes = '接続できません: ';
+    // ログインしてない状態だと、chatserver.js は new Error('unauthorized') を返す
+    if(err.message === 'unauthorized') {
+      mes += '認証に失敗しました。';
+    }
+    alert(mes);
   });
 
   const parseChatMessage = obj => {

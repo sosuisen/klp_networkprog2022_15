@@ -1,6 +1,8 @@
 const http = require('http');
 const express = require('express');
 const { Server } = require('socket.io');
+// セッションを用いるためのミドルウェア
+// https://expressjs.com/en/resources/middleware/session.html
 const session = require('express-session');
 
 const host = 'localhost';
@@ -37,22 +39,29 @@ app.set('views', './views');
 app.use(express.static('static'));
 
 // form で POST された内容を読み取り
-app.use(express.urlencoded({extended: true})); //Parse URL-encoded bodies
+app.use(express.urlencoded()); //Parse URL-encoded bodies
 
 // session を使えるようにする
 const sessionMiddleware = session({
-  secret: 'klA1ly7Fry?q',  // セキュリティのため推測できない値を設定
-  resave: false,
-  saveUninitialized: true,
+  // secret: セッションハイジャックを防ぐセキュリティのため、推測できない値を設定
+  secret: 'klA1ly7Fry?q',  
+  // resave: セッションの値が変更されなかった場合でも、セッションを強制的にセッションストアに保存するか？ 通常 false でよい。
+  resave: false, 
+  // saveUninitialized: 初期化されてないセッションを保存するか？ 通常は false でよい。
+  saveUninitialized: false,
+  // 本当はサーバをHTTPS化した後、secure: true を用いるべき
+  // secure: true,
 });
 app.use(sessionMiddleware);
 
+// http://localhost:8080/ を開いたとき。
+// ログインしていなくても開くことができる。
 app.get('/', (req, res) => {
   // テンプレートファイル ./views/index.ejs 元にHTMLを生成
   res.render('index', { userName: req.session.username });
 });
 
-// login へ GET の場合
+// /login を開いたとき（GET）の場合
 app.get('/login', (req, res) => {
   if (req.session.username) {
     // ログイン済みであれば /chat へリダイレクト
@@ -64,12 +73,15 @@ app.get('/login', (req, res) => {
   }
 });
 
-// login へ POST の場合
+// login へ POST した場合
 app.post('/login', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
+  // パスワードの照合
   if (auth[username] === password) {
+    // 登録ユーザの場合、セッションを生成
     req.session.regenerate((err) => {
+      // セッションにはユーザ名を保存しておく
       req.session.username = username;
       res.redirect('/chat');
     });
@@ -79,6 +91,7 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
+  // セッションを破棄
   req.session.destroy((err) => {
     res.redirect('/');
   });
@@ -88,6 +101,7 @@ app.get('/logout', (req, res) => {
 // ログインページへリダイレクト
 app.use((req, res, next) => {
   if (req.session.username) {
+    // usernameがセッションに保存されている場合、ログイン済みなのでスキップ
     next();
   } else {
     res.redirect('/login');
@@ -112,9 +126,13 @@ io.use((socket, next) => sessionMiddleware(socket.request, {}, next));
 io.use((socket, next) => {
   const session = socket.request.session;
   if (session && session.username) {
+    // ログイン済みの場合、次へ
     next();
   } else {
-    next(new Error("unauthorized"));
+    // 例えば、ログインして http://localhost:8080/chat を開いたのち、
+    // ブラウザのクッキーを削除するとログイン解除されるため、
+    // エラーを返して終わる
+    next(new Error('unauthorized'));
   }
 });
 
@@ -123,7 +141,8 @@ io.on('connection', socket => {
   // （１）入室時の処理
   const ip = socket.handshake.address;
   // 1-1) 入室したユーザの名前を取得
-  const userName = socket.handshake.query.userName;
+  // express-session に保存されたユーザ名を用いる
+  const userName = socket.request.session.username;
   if (userName === undefined || userName === "") {
     console.log('Disconnected: User name not found.');
     socket.disconnect(true);
